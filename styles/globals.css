@@ -1,3 +1,32 @@
 @tailwind base;
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #86868a;
+  }
+
+  ::-webkit-scrollbar {
+    background-color: transparent;
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #86868a;
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #aaaaaa;
+  }
+}
 @tailwind components;
 @tailwind utilities;
