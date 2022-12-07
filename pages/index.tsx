@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 export default function Home() {
@@ -64,9 +65,13 @@ export default function Home() {
               />
             </svg>
           </div>
-          <button className="h-16 w-full rounded-xl bg-gradient-to-br from-white/20 to-transparent p-5 text-lg font-bold shadow-lg">
+          <Link
+            href="/create"
+            className="h-16 w-full rounded-xl bg-gradient-to-br from-white/20 to-transparent p-5 text-lg font-bold shadow-lg"
+          >
             Create
-          </button>
+          </Link>
+
           <form
             className="flex h-16 items-center gap-4"
             onSubmit={handleSubmit}
