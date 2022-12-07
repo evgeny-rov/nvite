@@ -14,7 +14,7 @@ const useViewerSession = (id?: string) => {
   useEffect(() => {
     if (!id) return;
 
-    const URL = "http://localhost:8080";
+    const URL = "https://nvite-sig.onrender.com";
     const socket = io(URL);
 
     const peerConnection = new RTCPeerConnection(peerConnectionConfig);

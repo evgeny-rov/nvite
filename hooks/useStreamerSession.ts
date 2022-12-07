@@ -25,7 +25,7 @@ const useStreamerSession = (stream: MediaStream | null) => {
   useEffect(() => {
     if (!stream) return;
 
-    const URL = "http://localhost:8080";
+    const URL = "https://nvite-sig.onrender.com";
     const socket = io(URL);
 
     socket.on("peer", async ({ type, from, data }) => {
