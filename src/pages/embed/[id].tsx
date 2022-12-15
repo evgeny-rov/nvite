@@ -27,6 +27,7 @@ export default function Consume() {
       <video
         style={{ position: "fixed", width: "100%", height: "100%" }}
         ref={videoRef}
+        controls
         autoPlay
         muted
       ></video>
