@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import useViewerSession from "../../hooks/useViewerSession";
+import useViewerSession from "../../hooks/use-view-session";
 
 export default function Consume() {
   const router = useRouter();

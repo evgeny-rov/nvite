@@ -1,58 +1,18 @@
-import * as Select from "@radix-ui/react-select";
 import clsx from "clsx";
 import Head from "next/head";
-import { useEffect, useRef } from "react";
-import useDeviceMediaStream from "../hooks/useDeviceMediaStream";
-import useStreamerSession from "../hooks/useStreamerSession";
+import { useEffect, useRef, useState } from "react";
+import useDeviceMediaStream from "../hooks/use-device-media-stream";
+import useStreamerSession from "../hooks/use-stream-session";
+import Select from "../components/select";
 
-interface SelectProps {
-  value: string;
-  placeholder: string;
-  items: Array<{ label: string; value: string }>;
-  onValueChange: (value: string) => void;
-}
-
-const AppSelect = ({
-  value,
-  items,
-  placeholder,
-  onValueChange,
-}: SelectProps) => {
-  return (
-    <Select.Root onValueChange={onValueChange} value={value}>
-      <Select.Trigger
-        className="flex items-center justify-center gap-4 overflow-hidden rounded-md bg-neutral-800 px-4 py-1 text-sm"
-        aria-label="Video Device"
-      >
-        <span className="truncate">
-          <Select.Value placeholder={placeholder} />
-        </span>
-        <Select.Icon></Select.Icon>
-      </Select.Trigger>
-
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport className="rounded-md bg-neutral-800 p-2 text-sm shadow-lg">
-            <Select.Group>
-              {items.map(({ value, label }) => (
-                <Select.Item
-                  key={value}
-                  value={value}
-                  className="cursor-default rounded-md px-2 py-1 outline-none radix-highlighted:bg-neutral-700"
-                >
-                  <Select.ItemText>{label}</Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.Group>
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-};
+import MicrophoneIcon from "../assets/microphone.svg";
+import CameraIcon from "../assets/camera.svg";
+import VisibleIcon from "../assets/visible.svg";
+import UnlockedIcon from "../assets/unlocked.svg";
+import LockedIcon from "../assets/locked.svg";
+import Preview from "../components/preview";
 
 export default function Create() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const {
     videoDevices,
     audioDevices,
@@ -60,17 +20,9 @@ export default function Create() {
     updateStream,
     stream,
   } = useDeviceMediaStream();
-
-  const { sessionId, viewers, start, lock, unlock } =
+  const { sessionId, isLocked, viewers, start, lock, unlock } =
     useStreamerSession(stream);
-
-  console.log({ viewers, sessionId });
-
-  useEffect(() => {
-    if (!videoRef.current) return;
-
-    videoRef.current.srcObject = stream;
-  }, [stream]);
+  const [isPreviewShown, setIsPreviewShown] = useState(true);
 
   return (
     <>
@@ -83,59 +35,106 @@ export default function Create() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex min-h-screen flex-wrap items-center justify-center gap-24 bg-neutral-900">
-        <div className={clsx("w-[500px]", "bg-neutral-800")}>
-          <video
-            className="h-full w-full"
-            ref={videoRef}
-            autoPlay
-            controls
-            muted
-          />
-        </div>
+      <main className="flex min-h-screen flex-col items-center gap-5 overflow-hidden bg-neutral-900 p-1">
+        <Preview
+          isPreviewShown={isPreviewShown}
+          sessionId={sessionId}
+          stream={stream}
+        />
 
-        <div className="flex w-96 flex-col gap-7 whitespace-nowrap  text-sm">
-          <p>sesh: {sessionId}</p>
-          <p>viewers: {viewers}</p>
-          <button onClick={start}>start</button>
-          <button onClick={lock}>lock</button>
-          <button onClick={unlock}>unlock</button>
-          <div className="flex gap-8">
-            <div className="flex items-center gap-4">
-              ico
-              <span>Video Source</span>
+        <div className="flex flex-col text-sm">
+          <div className="flex h-8 items-center gap-5">
+            <div
+              className={clsx(
+                "flex h-full items-center gap-8 rounded-md bg-neutral-800 px-3 py-1 text-sm text-neutral-500",
+                sessionId && "text-current"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={clsx(
+                    "h-2 w-2 rounded-full bg-current",
+                    sessionId && "text-rose-500"
+                  )}
+                />
+                <span>Live</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <VisibleIcon className="stroke-current" />
+                <span>{viewers}</span>
+              </div>
             </div>
-            <AppSelect
-              value={selectedDevicesIds.video}
-              items={[
-                { label: "No Video", value: "" },
-                ...videoDevices.map(({ deviceId, label }) => ({
-                  label,
-                  value: deviceId,
-                })),
-              ]}
-              placeholder="Select Video"
-              onValueChange={(id) => updateStream("video", id)}
-            />
+
+            {sessionId ? (
+              <button
+                className={clsx(
+                  "h-full rounded-md bg-neutral-800 px-6 py-1",
+                  isLocked && "bg-rose-500"
+                )}
+                onClick={isLocked ? unlock : lock}
+              >
+                <LockedIcon strokeWidth="1.5" className="stroke-current" />
+              </button>
+            ) : (
+              <button
+                className="h-full rounded-md bg-rose-500 px-3 py-1"
+                onClick={start}
+              >
+                Start
+              </button>
+            )}
+
+            <button
+              onClick={() => setIsPreviewShown((state) => !state)}
+              className="flex h-full items-center gap-3 rounded-md bg-neutral-800 px-3 py-1"
+            >
+              {isPreviewShown ? (
+                <VisibleIcon className="stroke-current" />
+              ) : (
+                <HiddenIcon className="stroke-current" />
+              )}
+              <span>Preview</span>
+            </button>
           </div>
-          <div className="flex gap-8">
-            <div className="flex items-center gap-4">
-              ico
-              <span>Audio Source</span>
+
+          {/* <div className="flex flex-col gap-8">
+            <div className="flex">
+              <div className="flex items-center gap-4">
+                <CameraIcon />
+                <span>Video Source</span>
+              </div>
+              <AppSelect
+                value={selectedDevicesIds.video}
+                items={[
+                  { label: "No Video", value: "" },
+                  ...videoDevices.map(({ deviceId, label }) => ({
+                    label,
+                    value: deviceId,
+                  })),
+                ]}
+                placeholder="Select Video"
+                onValueChange={(id) => updateStream("video", id)}
+              />
             </div>
-            <AppSelect
-              value={selectedDevicesIds.audio}
-              items={[
-                { label: "No Audio", value: "" },
-                ...audioDevices.map(({ deviceId, label }) => ({
-                  label,
-                  value: deviceId,
-                })),
-              ]}
-              placeholder="Select Audio"
-              onValueChange={(id) => updateStream("audio", id)}
-            />
-          </div>
+            <div className="flex gap-8">
+              <div className="flex items-center gap-4">
+                <MicrophoneIcon />
+                <span>Audio Source</span>
+              </div>
+              <AppSelect
+                value={selectedDevicesIds.audio}
+                items={[
+                  { label: "No Audio", value: "" },
+                  ...audioDevices.map(({ deviceId, label }) => ({
+                    label,
+                    value: deviceId,
+                  })),
+                ]}
+                placeholder="Select Audio"
+                onValueChange={(id) => updateStream("audio", id)}
+              />
+            </div>
+          </div> */}
         </div>
       </main>
     </>

@@ -103,7 +103,7 @@ const useStreamerSession = (stream: MediaStream | null) => {
     });
   }, [stream]);
 
-  return { sessionId, viewers, start, lock, unlock };
+  return { sessionId, isLocked, viewers, start, lock, unlock };
 };
 
 export default useStreamerSession;
