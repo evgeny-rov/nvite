@@ -1,6 +1,8 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
+import ChevronDownIcon from "../assets/chevron-down.svg";
 
 interface SelectProps {
+  title: string;
   value: string;
   placeholder: string;
   items: Array<{ label: string; value: string }>;
@@ -8,6 +10,7 @@ interface SelectProps {
 }
 
 export default function Select({
+  title,
   value,
   items,
   placeholder,
@@ -16,18 +19,18 @@ export default function Select({
   return (
     <SelectPrimitive.Root onValueChange={onValueChange} value={value}>
       <SelectPrimitive.Trigger
-        className="flex items-center justify-center gap-4 overflow-hidden rounded-md bg-neutral-800 px-4 py-1 text-sm"
-        aria-label="Video Device"
+        className="flex max-w-[50%] items-center gap-2 rounded-md bg-neutral-800 px-4 py-1 text-left outline-none"
+        aria-label={title}
       >
-        <span className="truncate">
-          <SelectPrimitive.Value placeholder={placeholder} />
-        </span>
-        <SelectPrimitive.Icon></SelectPrimitive.Icon>
+        <SelectPrimitive.Value placeholder={placeholder} />
+        <SelectPrimitive.Icon>
+          <ChevronDownIcon strokeWidth={1.5} className="stroke-current" />
+        </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
 
       <SelectPrimitive.Portal>
-        <SelectPrimitive.Content>
-          <SelectPrimitive.Viewport className="rounded-md bg-neutral-800 p-2 text-sm shadow-lg">
+        <SelectPrimitive.Content className="max-w-[95%]">
+          <SelectPrimitive.Viewport className="rounded-md bg-neutral-800 p-2 text-sm shadow-lg ring-1 ring-neutral-700">
             <SelectPrimitive.Group>
               {items.map(({ value, label }) => (
                 <SelectPrimitive.Item

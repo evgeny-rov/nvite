@@ -21,9 +21,6 @@ const useDeviceMediaStream = () => {
     audio: "",
   });
 
-  const videoDevices = devices.filter((device) => device.kind === "videoinput");
-  const audioDevices = devices.filter((device) => device.kind === "audioinput");
-
   const createStream = async (devices: { video: string; audio: string }) => {
     const newStream = await navigator.mediaDevices.getUserMedia({
       video: devices.video ? { deviceId: devices.video } : false,
@@ -33,7 +30,7 @@ const useDeviceMediaStream = () => {
     setStream(newStream);
   };
 
-  const updateStream = async (type: "video" | "audio", id: string) => {
+  const changeDevice = async (type: "video" | "audio", id: string) => {
     stream?.getTracks().forEach((track) => track.stop());
 
     const newDevices = { ...selectedDevicesIds, [type]: id };
@@ -88,10 +85,9 @@ const useDeviceMediaStream = () => {
   }, []);
 
   return {
-    videoDevices,
-    audioDevices,
+    devices,
     selectedDevicesIds,
-    updateStream,
+    changeDevice,
     stream,
   };
 };
