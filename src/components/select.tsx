@@ -30,13 +30,13 @@ export default function Select({
 
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content className="max-w-[95%]">
-          <SelectPrimitive.Viewport className="rounded-md bg-neutral-800 p-2 text-sm shadow-lg ring-1 ring-neutral-700">
+          <SelectPrimitive.Viewport className="rounded-md bg-neutral-800 p-1.5 text-xs shadow-lg ring-1 ring-neutral-700/50">
             <SelectPrimitive.Group>
               {items.map(({ value, label }) => (
                 <SelectPrimitive.Item
                   key={value}
                   value={value}
-                  className="cursor-default rounded-md px-2 py-1 outline-none radix-highlighted:bg-neutral-700"
+                  className="cursor-default rounded-md px-2 py-2 outline-none radix-highlighted:bg-blue-500"
                 >
                   <SelectPrimitive.ItemText>{label}</SelectPrimitive.ItemText>
                 </SelectPrimitive.Item>

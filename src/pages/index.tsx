@@ -35,7 +35,7 @@ export default function Home() {
           </div>
           <Link
             href="/create"
-            className="h-16 w-full rounded-xl bg-gradient-to-br from-white/20 to-transparent p-5 text-lg font-bold shadow-lg transition-all hover:bg-blue-800"
+            className="h-16 w-full rounded-xl bg-gradient-to-br from-white/20 to-transparent p-5 text-lg font-bold shadow-lg transition-all hover:bg-blue-500"
           >
             Create
           </Link>
@@ -53,7 +53,7 @@ export default function Home() {
               placeholder="Session ID"
               className="h-full w-full flex-grow rounded-xl border-[1px] border-neutral-800 bg-transparent px-5 text-base font-bold placeholder:text-neutral-500"
             />
-            <button className="rounded-xl bg-gradient-to-br from-white/20 to-transparent p-5 text-lg font-bold shadow-lg transition-all hover:bg-blue-800">
+            <button className="rounded-xl bg-gradient-to-br from-white/20 to-transparent p-5 text-lg font-bold shadow-lg transition-all hover:bg-blue-500">
               Connect
             </button>
           </form>

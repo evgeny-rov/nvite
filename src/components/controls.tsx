@@ -55,7 +55,7 @@ export default function Controls({
         <button
           className={clsx(
             "grid place-items-center rounded-md bg-neutral-800 transition-colors",
-            isLocked && "bg-rose-500"
+            isLocked && "bg-blue-500"
           )}
           onClick={toggleSessionLock}
         >
@@ -63,7 +63,7 @@ export default function Controls({
         </button>
       ) : (
         <button
-          className="rounded-md bg-rose-500 transition-opacity hover:opacity-90"
+          className="rounded-md bg-blue-500 transition-opacity hover:opacity-90"
           onClick={start}
         >
           <span className="font-semibold">Start</span>
@@ -72,7 +72,10 @@ export default function Controls({
 
       <button
         onClick={togglePreview}
-        className="flex items-center justify-center gap-3 rounded-md bg-neutral-800"
+        className={clsx(
+          "flex items-center justify-center gap-4 rounded-md bg-neutral-800 transition-colors",
+          isPreviewShown && "bg-blue-500"
+        )}
       >
         {isPreviewShown ? (
           <VisibleIcon className="stroke-current" />

@@ -21,7 +21,7 @@ export default function Preview({ stream, isPreviewShown, isLive }: Props) {
     return (
       <div
         className={clsx(
-          "grid h-full w-full place-items-center rounded-md bg-neutral-800 shadow-lg ring-rose-500",
+          "grid h-full w-full place-items-center rounded-md bg-neutral-800 shadow-lg ring-blue-500",
           isLive && "ring-2"
         )}
       >
@@ -35,7 +35,10 @@ export default function Preview({ stream, isPreviewShown, isLive }: Props) {
 
   return (
     <video
-      className={clsx("rounded-md shadow-lg ring-rose-500", isLive && "ring-2")}
+      className={clsx(
+        "h-full w-full rounded-md ring-blue-500",
+        isLive && "ring-2"
+      )}
       ref={videoRef}
       autoPlay
       controls
