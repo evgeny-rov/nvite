@@ -1,10 +1,6 @@
 import "../styles/globals.css";
-import { Inter } from "@next/font/google";
 import type { AppProps } from "next/app";
-
-const inter = Inter({
-  subsets: ["latin"],
-});
+import { inter } from "../styles/fonts";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

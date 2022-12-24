@@ -27,23 +27,24 @@ export default function Controls({
 }: Props) {
   const toggleSessionLock = isLocked ? unlock : lock;
   const isSessionStarted = sessionId !== null;
+  const isLive = sessionId !== null;
 
   return (
     <div className="grid h-8 grid-cols-3 gap-3">
       <div
         className={clsx(
           "flex justify-around rounded-md bg-neutral-800 text-sm",
-          !sessionId && "text-neutral-500"
+          !isLive && "text-neutral-500"
         )}
       >
         <div className="flex items-center gap-3">
           <div
             className={clsx(
               "h-2 w-2 rounded-full bg-current",
-              sessionId && "text-rose-500"
+              isLive && "text-rose-500"
             )}
           />
-          <span>Live</span>
+          <span>{isLive ? "Live" : "Offline"}</span>
         </div>
         <div className="flex items-center gap-3">
           <VisibleIcon className="stroke-current" />

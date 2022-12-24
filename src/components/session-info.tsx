@@ -1,29 +1,42 @@
-import ClipboardIcon from "../assets/clipboard.svg";
-import { Fragment_Mono } from "@next/font/google";
-
-const fragment_mono = Fragment_Mono({ weight: "400", subsets: ["latin"] });
+import { useState } from "react";
+import { fragment_mono } from "../styles/fonts";
+import CopyIcon from "../assets/copy.svg";
+import DoneIcon from "../assets/done.svg";
+import useDelay from "../hooks/use-delay";
 
 interface Props {
   sessionId: string;
 }
 
-// make font more recognisable
-
 export default function SessionInfo({ sessionId }: Props) {
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [delay] = useDelay();
   const sessionEmbedLinkUrl = `${window.location.origin}/embed/${sessionId}`;
+
+  const handleCopy = async () => {
+    if (!navigator.clipboard) return;
+
+    await navigator.clipboard.writeText(sessionEmbedLinkUrl);
+    setIsLinkCopied(true);
+    delay(() => setIsLinkCopied(false), 1500);
+  };
 
   return (
     <div className="flex gap-3">
       <div className="flex items-center justify-between gap-4 rounded-md bg-neutral-800 py-1.5 px-4">
         <span className={fragment_mono.className}>{sessionId}</span>
-        <button className="h-full text-neutral-400 hover:text-current">
-          <ClipboardIcon strokeWidth={1.5} className="stroke-current" />
-        </button>
       </div>
-      <div className="flex grow items-center justify-between break-all rounded-md bg-neutral-800 px-4 py-1.5">
+      <div className="flex grow items-center justify-between gap-4 break-all rounded-md bg-neutral-800 px-4 py-1.5">
         <span className="text-neutral-400">{sessionEmbedLinkUrl}</span>
-        <button className="h-full text-neutral-400 hover:text-current">
-          <ClipboardIcon strokeWidth={1.5} className="stroke-current" />
+        <button
+          onClick={handleCopy}
+          className="h-full text-neutral-400 hover:text-current"
+        >
+          {isLinkCopied ? (
+            <DoneIcon strokeWidth={1.5} className="stroke-current" />
+          ) : (
+            <CopyIcon strokeWidth={1.5} className="stroke-current" />
+          )}
         </button>
       </div>
     </div>

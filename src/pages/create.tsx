@@ -7,7 +7,6 @@ import Preview from "../components/preview";
 import Controls from "../components/controls";
 import UserDevices from "../components/user-devices";
 import SessionInfo from "../components/session-info";
-import clsx from "clsx";
 
 export default function Create() {
   const media = useDeviceMediaStream();
@@ -37,7 +36,7 @@ export default function Create() {
             />
           </div>
 
-          <div className="flex flex-col gap-8 text-sm lg:max-w-xl">
+          <div className="flex w-full max-w-xl flex-col gap-8 text-sm">
             <div className="grid gap-3">
               <Controls
                 {...session}
