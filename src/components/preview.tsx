@@ -15,13 +15,13 @@ export default function Preview({ stream, isPreviewShown, isLive }: Props) {
     if (!videoRef.current) return;
 
     videoRef.current.srcObject = stream;
-  }, [stream, isPreviewShown]);
+  }, [stream]);
 
-  if (!isPreviewShown) {
-    return (
+  return (
+    <div className="relative">
       <div
         className={clsx(
-          "grid h-full w-full place-items-center rounded-md bg-neutral-800 shadow-lg ring-blue-500",
+          "absolute flex h-full w-full justify-center rounded-md bg-neutral-800 shadow-lg ring-blue-500",
           isLive && "ring-2"
         )}
       >
@@ -30,19 +30,16 @@ export default function Preview({ stream, isPreviewShown, isLive }: Props) {
           <span className="text-sm">Preview Hidden</span>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <video
-      className={clsx(
-        "h-full w-full rounded-md ring-blue-500",
-        isLive && "ring-2"
-      )}
-      ref={videoRef}
-      autoPlay
-      controls
-      muted
-    />
+      <video
+        className={clsx(
+          "relative w-full rounded-md",
+          !isPreviewShown && "invisible"
+        )}
+        ref={videoRef}
+        autoPlay
+        controls
+        muted
+      />
+    </div>
   );
 }

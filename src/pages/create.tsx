@@ -27,20 +27,17 @@ export default function Create() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="fixed grid h-full w-full place-items-center bg-neutral-900">
-        <div
-          className={clsx(
-            "grid h-full w-full grid-rows-2 gap-5 p-2",
-            "md:max-h-96 md:max-w-6xl md:grid-cols-2 md:grid-rows-none md:items-center lg:gap-20"
-          )}
-        >
-          <Preview
-            isPreviewShown={isPreviewShown}
-            stream={media.stream}
-            isLive={session.sessionId !== null}
-          />
+      <div className="flex min-h-screen">
+        <main className="flex w-full flex-col items-center gap-5 p-2 lg:flex-row lg:justify-center xl:gap-20">
+          <div className="w-full lg:max-w-xl">
+            <Preview
+              isPreviewShown={isPreviewShown}
+              stream={media.stream}
+              isLive={session.sessionId !== null}
+            />
+          </div>
 
-          <div className="flex flex-col gap-8 text-sm">
+          <div className="flex flex-col gap-8 text-sm lg:max-w-xl">
             <div className="grid gap-3">
               <Controls
                 {...session}
@@ -58,8 +55,8 @@ export default function Create() {
               changeDevice={media.changeDevice}
             />
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 }
