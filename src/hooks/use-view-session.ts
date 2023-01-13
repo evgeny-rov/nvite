@@ -14,12 +14,16 @@ const useViewerSession = (id?: string) => {
   useEffect(() => {
     if (!id) return;
 
-    const URL = "https://nvite-sig.onrender.com";
+    const URL = "https://io-relay.onrender.com";
     const socket = io(URL);
+
+    socket.on("session", ({ token }) => {
+      socket.auth = { sessionToken: token };
+    });
 
     const peerConnection = new RTCPeerConnection(peerConnectionConfig);
 
-    socket.on("peer", async ({ type, from, data }) => {
+    socket.on("direct", async ({ type, from, data }) => {
       if (type === "offer") {
         await peerConnection.setRemoteDescription(
           new RTCSessionDescription(data)
@@ -29,10 +33,10 @@ const useViewerSession = (id?: string) => {
 
         peerConnection.onicecandidate = (ev) => {
           if (!ev.candidate) return;
-          socket.emit("peer", { type: "ice", to: id, data: ev.candidate });
+          socket.emit("direct", { type: "ice", to: id, data: ev.candidate });
         };
 
-        socket.emit("peer", { type: "answer", to: id, data: description });
+        socket.emit("direct", { type: "answer", to: id, data: description });
       } else if (type === "ice") {
         await peerConnection.addIceCandidate(new RTCIceCandidate(data));
       }
@@ -42,7 +46,7 @@ const useViewerSession = (id?: string) => {
       setStream(ev.streams[0]);
     };
 
-    socket.emit("peer", { type: "new", to: id, data: null });
+    socket.emit("direct", { type: "new", to: id, data: null });
 
     return () => {
       peerConnection.close();

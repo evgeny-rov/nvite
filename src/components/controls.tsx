@@ -8,6 +8,7 @@ interface Props {
   sessionId: string | null;
   viewers: number;
   isLocked: boolean;
+  isConnecting: boolean;
   isPreviewShown: boolean;
   togglePreview: () => void;
   start: () => void;
@@ -19,6 +20,7 @@ export default function Controls({
   sessionId,
   viewers,
   isLocked,
+  isConnecting,
   isPreviewShown,
   togglePreview,
   lock,
@@ -64,10 +66,13 @@ export default function Controls({
         </button>
       ) : (
         <button
+          disabled={isConnecting}
           className="rounded-md bg-blue-500 transition-opacity hover:opacity-90"
           onClick={start}
         >
-          <span className="font-semibold">Start</span>
+          <span className="font-semibold">
+            {isConnecting ? "Starting..." : "Start"}
+          </span>
         </button>
       )}
 

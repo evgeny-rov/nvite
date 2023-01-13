@@ -11,13 +11,17 @@ const peerConnectionConfig = {
 // screen wake lock?
 
 const useStreamerSession = (stream: MediaStream | null) => {
+  const [isConnecting, setIsConnecting] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [socket, setSocket] = useState<Socket>();
   const [viewers, setViewers] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const peers = useRef<Map<string, RTCPeerConnection>>(new Map());
 
-  const start = () => socket && socket.emit("host");
+  const start = () => {
+    socket && socket.connect();
+    setIsConnecting(true);
+  };
   const lock = () => setIsLocked(true);
   const unlock = () => setIsLocked(false);
 
@@ -33,7 +37,7 @@ const useStreamerSession = (stream: MediaStream | null) => {
 
         peers.current.set(from, peerConnection);
         setViewers((n) => n + 1);
-        socket.emit("peer", { type: "offer", to: from, data: description });
+        socket.emit("direct", { type: "offer", to: from, data: description });
 
         stream
           ?.getTracks()
@@ -41,7 +45,7 @@ const useStreamerSession = (stream: MediaStream | null) => {
 
         peerConnection.onicecandidate = (ev) => {
           if (!ev.candidate) return;
-          socket.emit("peer", { type: "ice", to: from, data: ev.candidate });
+          socket.emit("direct", { type: "ice", to: from, data: ev.candidate });
         };
 
         peerConnection.onconnectionstatechange = () => {
@@ -56,7 +60,7 @@ const useStreamerSession = (stream: MediaStream | null) => {
         peerConnection.onnegotiationneeded = async (ev) => {
           const description = await peerConnection.createOffer();
           await peerConnection.setLocalDescription(description);
-          socket.emit("peer", { type: "offer", to: from, data: description });
+          socket.emit("direct", { type: "offer", to: from, data: description });
         };
       } else if (type === "answer") {
         const peerConnection = peers.current.get(from);
@@ -73,11 +77,16 @@ const useStreamerSession = (stream: MediaStream | null) => {
   );
 
   useEffect(() => {
-    const URL = "https://nvite-sig.onrender.com";
-    const socket = io(URL);
+    const URL = "https://io-relay.onrender.com";
+    const socket = io(URL, { autoConnect: false });
+
     setSocket(socket);
 
-    socket.on("host:promoted", ({ hostId }) => setSessionId(hostId));
+    socket.on("session", ({ userId, token }) => {
+      socket.auth = { sessionToken: token };
+      setIsConnecting(false);
+      setSessionId(userId);
+    });
 
     return () => {
       socket.disconnect();
@@ -87,10 +96,10 @@ const useStreamerSession = (stream: MediaStream | null) => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("peer", handlePeerMessage);
+    socket.on("direct", handlePeerMessage);
 
     return () => {
-      socket.removeAllListeners("peer");
+      socket.removeAllListeners("direct");
     };
   }, [handlePeerMessage, socket]);
 
@@ -103,7 +112,7 @@ const useStreamerSession = (stream: MediaStream | null) => {
     });
   }, [stream]);
 
-  return { sessionId, isLocked, viewers, start, lock, unlock };
+  return { sessionId, isLocked, isConnecting, viewers, start, lock, unlock };
 };
 
 export default useStreamerSession;
