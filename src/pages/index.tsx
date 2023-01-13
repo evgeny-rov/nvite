@@ -48,8 +48,6 @@ export default function Home() {
               type="text"
               required
               name="sessionId"
-              minLength={6}
-              maxLength={6}
               placeholder="Session ID"
               className="h-full w-full flex-grow rounded-xl border-[1px] border-neutral-800 bg-transparent px-5 text-base font-bold placeholder:text-neutral-500"
             />
