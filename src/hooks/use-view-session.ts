@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 
+export interface IRTCPeerConnection extends RTCPeerConnection {
+  isMakingOffer: boolean;
+  isIgnoringOffer: boolean;
+  isSettingRemoteAnswerPending: boolean;
+  isPolite: boolean;
+}
+
 const peerConnectionConfig = {
   iceServers: [
     { urls: "stun:stun.stunprotocol.org:3478" },
@@ -14,42 +21,87 @@ const useViewerSession = (id?: string) => {
   useEffect(() => {
     if (!id) return;
 
-    const URL = "https://io-relay.onrender.com";
+    // const URL = "https://io-relay.onrender.com";
+    const URL = "http://localhost:8080";
     const socket = io(URL);
 
+    socket.onAny((...args) => console.log(...args));
+    socket.onAnyOutgoing((...args) => console.log(...args));
+
     socket.on("session", ({ token }) => {
+      console.log(token);
       socket.auth = { sessionToken: token };
     });
 
-    const peerConnection = new RTCPeerConnection(peerConnectionConfig);
+    const pc = new RTCPeerConnection(
+      peerConnectionConfig
+    ) as IRTCPeerConnection;
 
-    socket.on("direct", async ({ type, from, data }) => {
-      if (type === "offer") {
-        await peerConnection.setRemoteDescription(
-          new RTCSessionDescription(data)
-        );
-        const description = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(description);
+    pc.isMakingOffer = false;
+    pc.isIgnoringOffer = false;
+    pc.isSettingRemoteAnswerPending = false;
+    pc.isPolite = true;
 
-        peerConnection.onicecandidate = (ev) => {
-          if (!ev.candidate) return;
-          socket.emit("direct", { type: "ice", to: id, data: ev.candidate });
-        };
+    window.addEventListener("online", () => pc.restartIce());
 
-        socket.emit("direct", { type: "answer", to: id, data: description });
-      } else if (type === "ice") {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(data));
-      }
-    });
-
-    peerConnection.ontrack = (ev) => {
+    pc.ontrack = (ev) => {
       setStream(ev.streams[0]);
     };
+
+    pc.onicecandidate = ({ candidate }) =>
+      socket.emit("direct", {
+        type: "candidate",
+        to: id,
+        data: candidate,
+      });
+
+    pc.onnegotiationneeded = async () => {
+      try {
+        pc.isMakingOffer = true;
+        await pc.setLocalDescription();
+        socket.emit("direct", {
+          type: "description",
+          to: id,
+          data: pc.localDescription,
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        pc.isMakingOffer = false;
+      }
+    };
+
+    socket.on("direct", async ({ type, from, data }) => {
+      if (type === "candidate" && data)
+        await pc.addIceCandidate(new RTCIceCandidate(data));
+
+      if (type === "description") {
+        const isReadyForOffer =
+          !pc.isMakingOffer &&
+          (pc.signalingState === "stable" || pc.isSettingRemoteAnswerPending);
+
+        const offerCollision = data.type === "offer" && !isReadyForOffer;
+        if (offerCollision && !pc.isPolite) return;
+
+        pc.isSettingRemoteAnswerPending = data.type === "answer";
+        await pc.setRemoteDescription(data);
+        pc.isSettingRemoteAnswerPending = false;
+
+        if (data.type === "offer") {
+          await pc.setLocalDescription();
+          socket.emit("direct", {
+            type: "description",
+            to: from,
+            data: pc.localDescription,
+          });
+        }
+      }
+    });
 
     socket.emit("direct", { type: "new", to: id, data: null });
 
     return () => {
-      peerConnection.close();
+      pc.close();
       socket.close();
     };
   }, [id]);

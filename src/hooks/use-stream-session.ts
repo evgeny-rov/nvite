@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 
+export interface IRTCPeerConnection extends RTCPeerConnection {
+  isMakingOffer: boolean;
+  isIgnoringOffer: boolean;
+  isSettingRemoteAnswerPending: boolean;
+  isPolite: boolean;
+}
+
 const peerConnectionConfig = {
   iceServers: [
     { urls: "stun:stun.stunprotocol.org:3478" },
@@ -16,7 +23,7 @@ const useStreamerSession = (stream: MediaStream | null) => {
   const [socket, setSocket] = useState<Socket>();
   const [viewers, setViewers] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const peers = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const peers = useRef<Map<string, IRTCPeerConnection>>(new Map());
 
   const start = () => {
     socket && socket.connect();
@@ -25,60 +32,97 @@ const useStreamerSession = (stream: MediaStream | null) => {
   const lock = () => setIsLocked(true);
   const unlock = () => setIsLocked(false);
 
+  const handleNewPeerConnection = useCallback(
+    (peerId: any, data: any) => {
+      if (!socket) return;
+
+      const pc = new RTCPeerConnection(
+        peerConnectionConfig
+      ) as IRTCPeerConnection;
+
+      pc.isMakingOffer = false;
+      pc.isIgnoringOffer = false;
+      pc.isSettingRemoteAnswerPending = false;
+      pc.isPolite = false;
+
+      window.addEventListener("online", () => pc.restartIce());
+
+      peers.current.set(peerId, pc);
+      stream?.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+      pc.onicecandidate = ({ candidate }) =>
+        socket.emit("direct", {
+          type: "candidate",
+          to: peerId,
+          data: candidate,
+        });
+
+      pc.onnegotiationneeded = async () => {
+        try {
+          pc.isMakingOffer = true;
+          await pc.setLocalDescription();
+          socket.emit("direct", {
+            type: "description",
+            to: peerId,
+            data: pc.localDescription,
+          });
+        } catch (err) {
+          console.error(err);
+        } finally {
+          pc.isMakingOffer = false;
+        }
+      };
+    },
+    [socket, stream]
+  );
+
   const handlePeerMessage = useCallback(
     async ({ type, from, data }: any) => {
       if (!socket) return;
 
-      if (type === "new" && !isLocked) {
-        const peerConnection = new RTCPeerConnection(peerConnectionConfig);
+      if (type === "new") {
+        handleNewPeerConnection(from, data);
+        return;
+      }
 
-        const description = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(description);
+      const pc = peers.current.get(from);
+      if (!pc) return;
 
-        peers.current.set(from, peerConnection);
-        setViewers((n) => n + 1);
-        socket.emit("direct", { type: "offer", to: from, data: description });
+      if (type === "candidate" && data)
+        await pc.addIceCandidate(new RTCIceCandidate(data));
 
-        stream
-          ?.getTracks()
-          .forEach((track) => peerConnection.addTrack(track, stream));
+      if (type === "description") {
+        const isReadyForOffer =
+          !pc.isMakingOffer &&
+          (pc.signalingState === "stable" || pc.isSettingRemoteAnswerPending);
 
-        peerConnection.onicecandidate = (ev) => {
-          if (!ev.candidate) return;
-          socket.emit("direct", { type: "ice", to: from, data: ev.candidate });
-        };
+        const offerCollision = data.type === "offer" && !isReadyForOffer;
+        if (offerCollision && !pc.isPolite) return;
 
-        peerConnection.onconnectionstatechange = () => {
-          const closeStates = ["disconnected", "failed"];
-          if (closeStates.includes(peerConnection.connectionState)) {
-            peerConnection.close();
-            peers.current.delete(from);
-            setViewers((n) => n - 1);
-          }
-        };
+        pc.isSettingRemoteAnswerPending = data.type === "answer";
+        await pc.setRemoteDescription(data);
+        pc.isSettingRemoteAnswerPending = false;
 
-        peerConnection.onnegotiationneeded = async (ev) => {
-          const description = await peerConnection.createOffer();
-          await peerConnection.setLocalDescription(description);
-          socket.emit("direct", { type: "offer", to: from, data: description });
-        };
-      } else if (type === "answer") {
-        const peerConnection = peers.current.get(from);
-        if (!peerConnection) return;
-
-        await peerConnection.setRemoteDescription(data);
-      } else if (type === "ice") {
-        const peerConnection = peers.current.get(from);
-        if (!peerConnection) return;
-        await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+        if (data.type === "offer") {
+          await pc.setLocalDescription();
+          socket.emit("direct", {
+            type: "description",
+            to: from,
+            data: pc.localDescription,
+          });
+        }
       }
     },
-    [stream, isLocked, socket]
+    [socket, handleNewPeerConnection]
   );
 
   useEffect(() => {
-    const URL = "https://io-relay.onrender.com";
+    // const URL = "https://io-relay.onrender.com";
+    const URL = "http://localhost:8080";
     const socket = io(URL, { autoConnect: false });
+
+    socket.onAny((...args) => console.log(...args));
+    socket.onAnyOutgoing((...args) => console.log(...args));
 
     setSocket(socket);
 
