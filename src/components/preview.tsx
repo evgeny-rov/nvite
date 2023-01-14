@@ -25,10 +25,12 @@ export default function Preview({ stream, isPreviewShown, isLive }: Props) {
           isLive && "ring-2"
         )}
       >
-        <div className="flex items-center gap-4 text-neutral-500">
-          <HiddenIcon className="stroke-current" />
-          <span className="text-sm">Preview Hidden</span>
-        </div>
+        {!isPreviewShown && (
+          <div className="flex items-center gap-4 text-neutral-500">
+            <HiddenIcon className="stroke-current" />
+            <span className="text-sm">Preview Hidden</span>
+          </div>
+        )}
       </div>
       <video
         className={clsx(
