@@ -55,12 +55,12 @@ export default function useStreamSession(stream: MediaStream | null) {
     if (!socket) return;
 
     socket.on("direct", ({ type, from, data }) => {
-      let pc = peers.current.get(from);
+      let activePc = peers.current.get(from);
 
-      if (!pc && isLocked) return;
+      if (!activePc && isLocked) return;
 
-      if (!pc) {
-        const newPc = createAppRTCPeerConnection({
+      if (!activePc) {
+        const pc = createAppRTCPeerConnection({
           config: peerConnectionConfig,
           isPolite: false,
           onCandidatePrepared: (candidate) => {
@@ -79,24 +79,36 @@ export default function useStreamSession(stream: MediaStream | null) {
           },
         });
 
-        newPc.oniceconnectionstatechange = () => {
+        pc.addEventListener("iceconnectionstatechange", () => {
           const connectedViewers = Array.from(peers.current.values()).filter(
             (pc) => pc.iceConnectionState === "connected"
           );
-
           setViewers(connectedViewers.length);
-        };
-        window.addEventListener("online", () => newPc.restartIce());
-        peers.current.set(from, newPc);
-        stream?.getTracks().forEach((track) => newPc.addTrack(track, stream));
 
-        pc = newPc;
+          const peerConnectionLostStates = ["disconnected", "failed"];
+
+          const isNetworkConnectionLost =
+            peerConnectionLostStates.includes(pc.iceConnectionState) &&
+            !socket.connected;
+
+          if (isNetworkConnectionLost) {
+            socket.once("connect", () => {
+              if (!peerConnectionLostStates.includes(pc.iceConnectionState))
+                return;
+              pc.restartIce();
+            });
+          }
+        });
+
+        peers.current.set(from, pc);
+        stream?.getTracks().forEach((track) => pc.addTrack(track, stream));
+        activePc = pc;
       }
 
       if (type === "candidate")
-        data && pc.takeCandidate(new RTCIceCandidate(data));
+        data && activePc.takeCandidate(new RTCIceCandidate(data));
       if (type === "description")
-        data && pc.takeDescription(new RTCSessionDescription(data));
+        data && activePc.takeDescription(new RTCSessionDescription(data));
     });
 
     return () => {

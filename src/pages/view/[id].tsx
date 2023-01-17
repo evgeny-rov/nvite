@@ -17,7 +17,7 @@ export default function Consume() {
   return (
     <>
       <Head>
-        <title>Nvite Session</title>
+        <title>View - Nvite</title>
         <meta
           name="description"
           content="Share, View, Embed your media streams"

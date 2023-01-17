@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
 
-const getPermissions = async () => {
-  return navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+const default_video_constraints: MediaTrackConstraints = {
+  width: { ideal: 1920 },
+  height: { ideal: 1080 },
+  frameRate: { max: 30 },
 };
+
+const initial_stream =
+  typeof window !== "undefined" &&
+  navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: { ...default_video_constraints, facingMode: "environment" },
+  });
 
 const enumerateDevices = async () => {
   const devices = await navigator.mediaDevices.enumerateDevices();
@@ -21,55 +30,58 @@ const useDeviceMediaStream = () => {
     audio: "",
   });
 
-  const createStream = async (devices: { video: string; audio: string }) => {
+  const updateDevices = async (type: "video" | "audio", id: string) => {
+    const newDevices = { ...selectedDevicesIds, [type]: id };
+    setSelectedDevicesIds(newDevices);
+
+    if (!id) {
+      stream
+        ?.getTracks()
+        .find((track) => track.kind === type)
+        ?.stop();
+      return;
+    }
+
+    stream?.getTracks().forEach((track) => track.stop());
+
     const newStream = await navigator.mediaDevices.getUserMedia({
-      video: devices.video ? { deviceId: devices.video } : false,
-      audio: devices.audio ? { deviceId: devices.audio } : false,
+      audio: newDevices.audio ? { deviceId: newDevices.audio } : false,
+      video: newDevices.video
+        ? { ...default_video_constraints, deviceId: newDevices.video }
+        : false,
     });
 
     setStream(newStream);
   };
 
-  const changeDevice = async (type: "video" | "audio", id: string) => {
-    stream?.getTracks().forEach((track) => track.stop());
-
-    const newDevices = { ...selectedDevicesIds, [type]: id };
-    setSelectedDevicesIds(newDevices);
-
-    if (!newDevices.video && !newDevices.audio) {
-      setStream(null);
-      return;
-    }
-
-    createStream(newDevices);
-  };
-
   useEffect(() => {
-    const createInitialStream = async () => {
-      await getPermissions();
-      const applicableDevices = await enumerateDevices();
+    const setInitialStream = async () => {
+      if (!initial_stream) return;
+      const stream = await initial_stream;
 
+      const applicableDevices = await enumerateDevices();
       setDevices(applicableDevices);
 
-      const initialVideoDevice = applicableDevices.find(
-        ({ kind }) => kind === "videoinput"
-      );
-      const initialAudioDevice = applicableDevices.find(
-        ({ kind }) => kind === "audioinput"
-      );
+      setSelectedDevicesIds(() => {
+        const videoDeviceId =
+          stream
+            .getVideoTracks()
+            .find((track) => track.readyState === "live")
+            ?.getCapabilities().deviceId ?? "";
 
-      if (initialVideoDevice || initialAudioDevice) {
-        const selectedDevicesIds = {
-          video: initialVideoDevice?.deviceId ?? "",
-          audio: initialAudioDevice?.deviceId ?? "",
-        };
+        const audioDeviceId =
+          stream
+            .getAudioTracks()
+            .find((track) => track.readyState === "live")
+            ?.getCapabilities().deviceId ?? "";
 
-        setSelectedDevicesIds(selectedDevicesIds);
-        createStream(selectedDevicesIds);
-      }
+        return { video: videoDeviceId, audio: audioDeviceId };
+      });
+
+      setStream(stream);
     };
 
-    createInitialStream();
+    setInitialStream();
   }, []);
 
   useEffect(() => {
@@ -87,7 +99,7 @@ const useDeviceMediaStream = () => {
   return {
     devices,
     selectedDevicesIds,
-    changeDevice,
+    updateDevices,
     stream,
   };
 };

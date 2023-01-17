@@ -52,7 +52,21 @@ export default function useViewSession(id?: string) {
       setStream(ev.streams[0]);
     };
 
-    window.addEventListener("online", () => pc.restartIce());
+    pc.oniceconnectionstatechange = () => {
+      const peerConnectionLostStates = ["disconnected", "failed"];
+
+      const isNetworkConnectionLost =
+        peerConnectionLostStates.includes(pc.iceConnectionState) &&
+        !socket.connected;
+
+      if (isNetworkConnectionLost) {
+        socket.once("connect", () => {
+          if (!peerConnectionLostStates.includes(pc.iceConnectionState)) return;
+          pc.restartIce();
+        });
+      }
+    };
+
     pc.negotiate();
 
     return () => {
