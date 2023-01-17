@@ -11,7 +11,7 @@ interface Props {
 export default function SessionInfo({ sessionId }: Props) {
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [delay] = useDelay();
-  const sessionEmbedLinkUrl = `${window.location.origin}/embed/${sessionId}`;
+  const sessionEmbedLinkUrl = `${window.location.origin}/view/${sessionId}`;
 
   const handleCopy = async () => {
     if (!navigator.clipboard) return;
