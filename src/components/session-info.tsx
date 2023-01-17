@@ -11,12 +11,12 @@ interface Props {
 export default function SessionInfo({ sessionId }: Props) {
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [delay] = useDelay();
-  const sessionEmbedLinkUrl = `${window.location.origin}/view/${sessionId}`;
+  const sessionViewLinkUrl = `${window.location.origin}/view/${sessionId}`;
 
   const handleCopy = async () => {
     if (!navigator.clipboard) return;
 
-    await navigator.clipboard.writeText(sessionEmbedLinkUrl);
+    await navigator.clipboard.writeText(sessionViewLinkUrl);
     setIsLinkCopied(true);
     delay(() => setIsLinkCopied(false), 1500);
   };
@@ -27,7 +27,7 @@ export default function SessionInfo({ sessionId }: Props) {
         <span className={fragment_mono.className}>{sessionId}</span>
       </div>
       <div className="flex grow items-center justify-between gap-4 break-all rounded-md bg-neutral-800 px-4 py-1.5">
-        <span className="text-neutral-400">{sessionEmbedLinkUrl}</span>
+        <span className="text-neutral-400">{sessionViewLinkUrl}</span>
         <button
           onClick={handleCopy}
           className="h-full text-neutral-400 hover:text-current"

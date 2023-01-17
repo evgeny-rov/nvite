@@ -9,7 +9,7 @@ export default function Home() {
 
   const handleSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    router.push("/embed/" + ev.currentTarget.sessionId.value);
+    router.push("/view/" + ev.currentTarget.sessionId.value);
   };
 
   return (
