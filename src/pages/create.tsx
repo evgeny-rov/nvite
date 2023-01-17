@@ -18,7 +18,7 @@ export default function Create() {
   return (
     <>
       <Head>
-        <title>Nvite Session</title>
+        <title>Create - Nvite</title>
         <meta
           name="description"
           content="Share, View, Embed your media streams"
@@ -27,7 +27,7 @@ export default function Create() {
       </Head>
 
       <div className="flex min-h-screen">
-        <main className="flex w-full flex-col items-center gap-5 p-2 lg:flex-row lg:justify-center xl:gap-20">
+        <main className="flex w-full flex-col items-center gap-5 p-2 md:flex-row lg:justify-center xl:gap-20">
           <div className="w-full lg:max-w-xl">
             <Preview
               isPreviewShown={isPreviewShown}
@@ -51,7 +51,7 @@ export default function Create() {
             <UserDevices
               devices={media.devices}
               selectedDevicesIds={media.selectedDevicesIds}
-              changeDevice={media.changeDevice}
+              changeDevice={media.updateDevices}
             />
           </div>
         </main>

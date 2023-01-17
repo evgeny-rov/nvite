@@ -22,7 +22,7 @@ export default function SessionInfo({ sessionId }: Props) {
   };
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-2">
       <div className="flex items-center justify-between gap-4 rounded-md bg-neutral-800 py-1.5 px-4">
         <span className={fragment_mono.className}>{sessionId}</span>
       </div>

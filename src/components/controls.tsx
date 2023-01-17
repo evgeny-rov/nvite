@@ -32,14 +32,14 @@ export default function Controls({
   const isLive = sessionId !== null;
 
   return (
-    <div className="grid h-8 grid-cols-3 gap-3">
+    <div className="grid h-8 grid-cols-3 gap-2">
       <div
         className={clsx(
           "flex justify-around rounded-md bg-neutral-800 text-sm",
           !isLive && "text-neutral-500"
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div
             className={clsx(
               "h-2 w-2 rounded-full bg-current",
@@ -48,7 +48,7 @@ export default function Controls({
           />
           <span>{isLive ? "Live" : "Offline"}</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <VisibleIcon className="stroke-current" />
           <span>{viewers}</span>
         </div>
@@ -77,7 +77,7 @@ export default function Controls({
       )}
 
       <button
-        onClick={togglePreview}
+        onClickCapture={togglePreview}
         className={clsx(
           "flex items-center justify-center gap-4 rounded-md bg-neutral-800 transition-colors",
           isPreviewShown && "bg-blue-500"
